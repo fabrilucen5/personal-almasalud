@@ -11,9 +11,9 @@
   --navy: #003D6B; --blue: #00508C; --gold: #F5A623; --gold-hover: #E09612;
   --border: #dde3f0; --text: #1A1A1A; --muted: #6b7494; --bg: #F7F9FC;
 }
-body { font-family: 'Poppins', 'Inter', sans-serif; color: var(--text); font-size: 16px; background: #eef2f7; min-height: 100vh; padding: 0; margin: 0; }
+body { font-family: 'Poppins', 'Inter', sans-serif; color: var(--text); font-size: 16px; background: #eef2f7; min-height: 100vh; }
 .wrap { max-width: 680px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 40px rgba(0,0,0,0.08); }
-.header { background: var(--navy); padding: 20px 28px; display: flex; align-items: center; gap: 20px; }
+.header { background: var(--navy); padding: 20px 28px; display: flex; align-items: center; gap: 20px; border-bottom: 3px solid var(--gold); }
 .header img { height: 72px; width: auto; object-fit: contain; display: block; }
 .header-divider { width: 1.5px; height: 54px; background: rgba(255,255,255,0.25); flex-shrink: 0; }
 .header-text { display: flex; flex-direction: column; gap: 4px; }
@@ -23,7 +23,7 @@ body { font-family: 'Poppins', 'Inter', sans-serif; color: var(--text); font-siz
 .tab { flex: 1; padding: 14px; font-size: 15px; font-weight: 600; border: none; background: none; cursor: pointer; color: rgba(255,255,255,0.45); transition: all 0.2s; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .tab.active { color: var(--gold); border-bottom: 3px solid var(--gold); margin-bottom: -3px; }
 .tab:hover { color: rgba(255,255,255,0.8); }
-.body { background: var(--bg); padding: 20px; border-top: none; }
+.body { background: var(--bg); padding: 20px; }
 .card { background: white; border: 0.5px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
 .section-title { font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); display: inline-block; }
 .field { margin-bottom: 14px; }
@@ -71,20 +71,19 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .rec-obs { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 5px; }
 .empty { text-align: center; padding: 2.5rem; color: var(--muted); font-size: 15px; }
 #sec-reg { display: none; }
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-.modal-overlay.show { display: flex; }
-.modal { background: white; border-radius: 14px; padding: 28px 24px; max-width: 360px; width: 92%; text-align: center; }
+.overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+.overlay.show { display: flex; }
+.modal { background: white; border-radius: 14px; padding: 28px 24px; max-width: 360px; width: 92%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
 .modal h3 { font-size: 18px; font-weight: 600; color: var(--navy); margin-bottom: 12px; }
 .modal p { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
 .modal-btns { display: flex; gap: 10px; justify-content: center; }
-
 @media (max-width: 480px) {
   .header { padding: 16px; gap: 14px; }
   .header img { height: 56px; }
   .header-text .title { font-size: 18px; }
   .body { padding: 14px; }
   .grid2, .grid3 { grid-template-columns: 1fr; }
-  .stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stats-row { gap: 8px; }
   .stat { padding: 10px; }
   .stat-value { font-size: 22px; }
   .top-bar { flex-direction: column; align-items: flex-start; }
@@ -95,7 +94,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <body>
 
 <!-- MODAL REINICIO -->
-<div class="modal-overlay" id="modal">
+<div class="overlay" id="modal-reinicio">
   <div class="modal">
     <h3>&iquest;Reiniciar registros?</h3>
     <p>Esta acci&oacute;n borra todos los registros locales. Los datos ya enviados se mantienen guardados.</p>
@@ -197,7 +196,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
         <div class="top-bar">
           <p>Fichajes registrados</p>
           <div class="top-actions">
-            <button class="btn-gold" onclick="exportarExcel()">&#8595; Descargar CSV</button>
+            <button class="btn-gold" onclick="exportarCSV()">&#8595; Descargar CSV</button>
             <button class="btn-danger" onclick="mostrarModal()">Reiniciar</button>
           </div>
         </div>
@@ -218,12 +217,15 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 <script>
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwkEradQlz1xKHi92tNMTopf9cpe07KJFzWaZoM3_htIK1abuo0J8ssPoaKzDDbHRF6/exec';
+const STORAGE_KEY = 'as_fichajes_v2';
+
+// ── TODAS las funciones en window — patrón que funciona en mobile ──
 
 window.calcHoras = function() {
   const e = document.getElementById('entrada').value;
   const s = document.getElementById('salida').value;
   const el = document.getElementById('total-horas');
-  if (!e || !s) { el.textContent = '--'; return; }
+  if (!e || !s) { el.textContent = '--'; delete el.dataset.decimal; return; }
   const [eh, em] = e.split(':').map(Number);
   const [sh, sm] = s.split(':').map(Number);
   let mins = (sh * 60 + sm) - (eh * 60 + em);
@@ -234,11 +236,6 @@ window.calcHoras = function() {
   el.dataset.decimal = (h + m / 60).toFixed(2).replace('.', ',');
 };
 
-function horasDecimal() {
-  const el = document.getElementById('total-horas');
-  return el.dataset.decimal || '';
-}
-
 window.goTab = function(s, btn) {
   document.getElementById('sec-form').style.display = s === 'form' ? 'block' : 'none';
   document.getElementById('sec-reg').style.display = s === 'reg' ? 'block' : 'none';
@@ -247,18 +244,20 @@ window.goTab = function(s, btn) {
   if (s === 'reg') { stats(); renderReg(); }
 };
 
-function getData() {
-  try { return JSON.parse(localStorage.getItem('as_fichajes') || '[]'); } catch(e) { return []; }
-}
-function saveData(d) { localStorage.setItem('as_fichajes', JSON.stringify(d)); }
+window.mostrarModal = function() {
+  document.getElementById('modal-reinicio').classList.add('show');
+};
 
-function mostrarAlerta(id, ms) {
-  ['ok','err-campos','err-envio','enviando'].forEach(i => {
-    document.getElementById(i).style.display = 'none';
-  });
-  document.getElementById(id).style.display = 'block';
-  if (ms) setTimeout(() => { document.getElementById(id).style.display = 'none'; }, ms);
-}
+window.cerrarModal = function() {
+  document.getElementById('modal-reinicio').classList.remove('show');
+};
+
+window.confirmarReinicio = function() {
+  localStorage.removeItem(STORAGE_KEY);
+  window.cerrarModal();
+  stats();
+  renderReg();
+};
 
 window.registrar = async function() {
   const nombre = document.getElementById('nombre').value.trim();
@@ -268,8 +267,9 @@ window.registrar = async function() {
   const entrada = document.getElementById('entrada').value;
   const salida = document.getElementById('salida').value;
   const obs = document.getElementById('obs').value.trim();
-  const totalDisplay = document.getElementById('total-horas').textContent;
-  const totalDecimal = horasDecimal();
+  const totalEl = document.getElementById('total-horas');
+  const totalDisplay = totalEl.textContent;
+  const totalDecimal = totalEl.dataset.decimal || '';
 
   if (!nombre || !rol || !evento || !lugar || !entrada || !salida) {
     mostrarAlerta('err-campos', 3000);
@@ -312,13 +312,47 @@ window.registrar = async function() {
 
   btn.disabled = false;
   btn.textContent = 'Registrar fichaje';
-  ['nombre','evento','lugar','obs'].forEach(id => document.getElementById(id).value = '');
+  ['nombre', 'evento', 'lugar', 'obs'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('rol').value = '';
   document.getElementById('entrada').value = '';
   document.getElementById('salida').value = '';
   document.getElementById('total-horas').textContent = '--';
   delete document.getElementById('total-horas').dataset.decimal;
 };
+
+window.exportarCSV = function() {
+  const d = getData();
+  if (!d.length) { alert('No hay registros para exportar.'); return; }
+  const cols = ['Fecha','Nombre','Rol','Evento/Cliente','Establecimiento','Hora entrada','Hora salida','Horas trabajadas','Observaciones'];
+  let csv = '\uFEFF' + cols.map(c => '"' + c + '"').join(';') + '\n';
+  d.forEach(r => {
+    csv += [r.fecha, r.nombre, r.rol, r.evento, r.lugar, r.entrada, r.salida, r.totalHoras || '', r.obs || '']
+      .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Fichajes_AlmaSalud_' + new Date().toLocaleDateString('es-AR').replace(/\//g, '-') + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+};
+
+window.renderReg = function() { renderReg(); };
+
+// ── Funciones internas ──
+function getData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+function mostrarAlerta(id, ms) {
+  ['ok', 'err-campos', 'err-envio', 'enviando'].forEach(i => {
+    document.getElementById(i).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  if (ms) setTimeout(() => { document.getElementById(id).style.display = 'none'; }, ms);
+}
 
 function stats() {
   const d = getData();
@@ -351,32 +385,6 @@ function renderReg() {
       ${r.obs ? '<div class="rec-obs">"' + esc(r.obs) + '"</div>' : ''}
     </div>`).join('');
 }
-
-window.exportarExcel = function() {
-  const d = getData();
-  if (!d.length) { alert('No hay registros para exportar.'); return; }
-  const enc = ['Fecha','Nombre','Rol','Evento/Cliente','Establecimiento','Hora entrada','Hora salida','Horas trabajadas','Observaciones'];
-  let csv = '\uFEFF' + enc.join(';') + '\n';
-  d.forEach(r => {
-    csv += [r.fecha, r.nombre, r.rol, r.evento, r.lugar, r.entrada, r.salida, r.totalHoras || '', r.obs || '']
-      .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';') + '\n';
-  });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'Fichajes_AlmaSalud_' + new Date().toLocaleDateString('es-AR').replace(/\//g, '-') + '.csv';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-};
-
-window.mostrarModal = function() { document.getElementById('modal').classList.add('show'); };
-window.cerrarModal = function() { document.getElementById('modal').classList.remove('show'); };
-window.confirmarReinicio = function() {
-  localStorage.removeItem('as_fichajes');
-  cerrarModal();
-  stats(); renderReg();
-};
 
 function esc(s) {
   return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
